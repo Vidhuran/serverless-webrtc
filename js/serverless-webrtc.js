@@ -120,9 +120,12 @@ function setupDC1() {
     } catch (e) { console.warn("No data channel (pc1)", e); }
 }
 
-getUserMedia({'audio':true, fake:true}, function (stream) {
+getUserMedia({'audio':true, 'video':true}, function (stream) {
     console.log("Got local audio", stream);
     pc1.addStream(stream);
+    var vid = document.getElementById("myvideo");
+    vid.autoplay = true;
+    attachMediaStream(vid, stream);
     setupDC1();
     pc1.createOffer(function (offerDesc) {
         console.log("Created local offer", offerDesc);
@@ -160,6 +163,8 @@ function handleAnswerFromPC2(answerDesc) {
     console.log("Received remote answer: ", answerDesc);
     writeToChatLog("Received remote answer", "text-success");
     pc1.setRemoteDescription(answerDesc);
+    pc1.getRemoteStreams(function(stream){console.log("PC1 stream ain't ... " + stream)});
+    pc2.getRemoteStreams(function(stream){console.log("PC2 stream ain't ... " + stream)});
 }
 
 function handleCandidateFromPC2(iceCandidate) {
@@ -201,10 +206,12 @@ pc2.ondatachannel = function (e) {
 
 function handleOfferFromPC1(offerDesc) {
     pc2.setRemoteDescription(offerDesc);
+    pc2.getRemoteStreams(function(streams){console.log("Remote Stream here ? " + stream)});
     pc2.createAnswer(function (answerDesc) {
         writeToChatLog("Created local answer", "text-success");
         console.log("Created local answer: ", answerDesc);
         pc2.setLocalDescription(answerDesc);
+        pc2.getRemoteStreams(function(streams){console.log("Remote Stream here ? " + stream)});
         $('#localAnswer').html(JSON.stringify(answerDesc));
     }, function () { console.warn("No create answer"); });
 }
@@ -219,9 +226,20 @@ function handleCandidateFromPC1(iceCandidate) {
     pc2.addIceCandidate(iceCandidate);
 }
 
+pc1.onaddstream = function (e) {
+    console.log("Should get something here ain't", e);
+    // var el = new Audio();
+    // el.autoplay = true;
+    var el = document.getElementById("peervideo");
+    el.autoplay = true;
+    attachMediaStream(el, e.stream);
+};
+
 pc2.onaddstream = function (e) {
     console.log("Got remote stream", e);
-    var el = new Audio();
+    // var el = new Audio();
+    // el.autoplay = true;
+    var el = document.getElementById("peervideo");
     el.autoplay = true;
     attachMediaStream(el, e.stream);
 };
